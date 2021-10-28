@@ -1,0 +1,35 @@
+[package]
+name = "tmuntaner-webauthn"
+authors = ["Thomas Muntaner <thomas.muntaner@gmail.com>"]
+version = "0.1.0-alpha.1"
+edition = "2018"
+license = "MPL-2.0"
+description = "A webauthn client"
+homepage = "https://github.com/tmuntaner/webaunth-rs"
+repository = "https://github.com/tmuntaner/webauthn-rs"
+documentation = "https://docs.rs/tmuntaner-webauthn"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.13"
+url = "2.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+
+[target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
+indicatif = "0.16"
+authenticator = "0.3"
+sha2 = "0.9"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+widestring = "0.5"
+
+[target.'cfg(target_os = "windows")'.dependencies.windows]
+version = "0.22"
+features = [
+    "Win32_Foundation",
+    "Win32_Networking_WindowsWebServices",
+    "Win32_UI_WindowsAndMessaging",
+]
