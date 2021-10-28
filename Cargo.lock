@@ -10,9 +10,9 @@ checksum = "61604a8f862e1d5c3229fdd78f8b02c68dcf73a4c4b05fd636d12240aaa242c1"
 
 [[package]]
 name = "arrayvec"
-version = "0.7.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be4dc07131ffa69b8072d35f5007352af944213cde02545e2103680baed38fcd"
+checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
 
 [[package]]
 name = "authenticator"
@@ -490,7 +490,7 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tmuntaner-webauthn"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 dependencies = [
  "anyhow",
  "authenticator",
@@ -585,9 +585,9 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "windows"
-version = "0.22.1"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e63b5b81676d36bcf3d8c41b0f6ca574bb2399ba0963c6b9f110f7839a200bce"
+checksum = "9bce04249a9644c157f4529ea958f5d9e0129280e3700378884afa2903fd3d56"
 dependencies = [
  "windows_i686_msvc",
  "windows_x86_64_msvc",
@@ -595,12 +595,12 @@ dependencies = [
 
 [[package]]
 name = "windows_i686_msvc"
-version = "0.22.1"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23330f18aae0ccad49809c82a48e01e965bcc831813f32fe1bb89d8845f7365b"
+checksum = "65911a6b53be443df22004ae7d82121dabce94d74ba5735081788115b81cb919"
 
 [[package]]
 name = "windows_x86_64_msvc"
-version = "0.22.1"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be253f6efe83a48d5d42d13be30ac63ac597f7d87b09c7fd37221a5a04d09628"
+checksum = "8c8c8e2d709fbc4e6ff5d75503cbad8241c5df62fd60f62c0f8eef6e86689e63"
