@@ -29,6 +29,7 @@ widestring = "0.5"
 [target.'cfg(target_os = "windows")'.dependencies.windows]
 version = "^0.26"
 features = [
+    "std",
     "Win32_Foundation",
     "Win32_Networking_WindowsWebServices",
     "Win32_UI_WindowsAndMessaging",
