@@ -27,7 +27,7 @@ sha2 = "0.9"
 widestring = "0.5"
 
 [target.'cfg(target_os = "windows")'.dependencies.windows]
-version = "^0.26"
+version = "^0.27"
 features = [
     "std",
     "Win32_Foundation",
