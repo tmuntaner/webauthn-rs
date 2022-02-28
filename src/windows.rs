@@ -7,8 +7,9 @@
 use crate::SignatureResponse;
 use anyhow::Result;
 use widestring::U16CString;
+use windows::core::PCWSTR;
+use windows::Win32::Networking::WindowsWebServices::*;
 use windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
-use windows::Win32::{Foundation::*, Networking::WindowsWebServices::*};
 
 pub fn sign(
     challenge_str: String,
@@ -17,14 +18,14 @@ pub fn sign(
 ) -> Result<SignatureResponse> {
     let origin: String = format!("https://{}", host);
     let rp_id = U16CString::from_str(host)?;
-    let rp_id = PWSTR(rp_id.as_ptr() as *mut u16);
+    let rp_id = PCWSTR(rp_id.as_ptr() as *mut u16);
     let client_data = crate::utils::client_data(origin, challenge_str)?;
 
     let hwnd = unsafe { GetForegroundWindow() };
 
     let credential_type = String::from("public-key");
     let credential_type = U16CString::from_str(credential_type)?;
-    let credential_type = PWSTR(credential_type.as_ptr() as *mut u16);
+    let credential_type = PCWSTR(credential_type.as_ptr() as *mut u16);
 
     let mut webauthn_credentials: Vec<WEBAUTHN_CREDENTIAL> = credential_ids
         .into_iter()
@@ -48,7 +49,7 @@ pub fn sign(
 
     let hash_algorithm = String::from("SHA-256");
     let hash_algorithm = U16CString::from_str(hash_algorithm)?;
-    let hash_algorithm = PWSTR(hash_algorithm.as_ptr() as *mut u16);
+    let hash_algorithm = PCWSTR(hash_algorithm.as_ptr() as *mut u16);
 
     let client_data_bytes = client_data.as_bytes();
     let webuathn_client_data = Box::new(WEBAUTHN_CLIENT_DATA {
