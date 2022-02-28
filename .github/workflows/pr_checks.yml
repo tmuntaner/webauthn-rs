@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   lints-linux:
-    name: Lints on Linux
+    name: Checks on Linux
     runs-on: ubuntu-latest
     steps:
       - run: sudo apt-get update -y && sudo apt-get install -y libudev-dev libdbus-1-dev
@@ -31,9 +31,14 @@ jobs:
         with:
           command: clippy
           args: -- -D warnings
+
+      - name: Run cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
 
   lints-mac:
-    name: Lints on Mac
+    name: Checks on Mac
     runs-on: macos-latest
     steps:
       - name: Checkout sources
@@ -59,9 +64,14 @@ jobs:
         with:
           command: clippy
           args: -- -D warnings
+
+      - name: Run cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
 
   lints-windows:
-    name: Lints on Windows
+    name: Checks on Windows
     runs-on: windows-latest
     steps:
       - name: Checkout sources
@@ -87,122 +97,7 @@ jobs:
           command: clippy
           args: -- -D warnings
 
-  test-linux:
-    name: Test Suite on Linux
-    runs-on: ubuntu-latest
-    steps:
-      - run: sudo apt-get update -y && sudo apt-get install -y libudev-dev libdbus-1-dev
-
-      - name: Checkout sources
-        uses: actions/checkout@v2
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
           command: test
-
-  test-mac:
-    name: Test Suite on Mac
-    runs-on: macos-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-          target: x86_64-apple-darwin
-
-      - name: Run cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-
-  test-windows:
-    name: Test Suite on Windows
-    runs-on: windows-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - name: Run cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-
-  check-linux:
-    name: Checks for Linux
-    runs-on: ubuntu-latest
-    steps:
-      - run: sudo apt-get update -y && sudo apt-get install -y libudev-dev libdbus-1-dev
-
-      - name: Checkout sources
-        uses: actions/checkout@v2
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - name: Run cargo check
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-
-  check-mac:
-    name: Checks for Mac
-    runs-on: macos-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-          target: x86_64-apple-darwin
-
-      - name: Run cargo check
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-
-  check-windows:
-    name: Checks for Windows
-    runs-on: windows-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - name: Run cargo check
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
