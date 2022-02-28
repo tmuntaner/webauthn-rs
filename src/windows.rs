@@ -84,7 +84,7 @@ pub fn sign(
     let signature = unsafe {
         std::slice::from_raw_parts_mut(assertion.pbSignature, assertion.cbSignature as usize)
     };
-    let signature_data = base64::encode_config(signature.to_vec(), base64::STANDARD);
+    let signature_data = base64::encode_config(signature, base64::STANDARD);
 
     let authenticator_data = unsafe {
         std::slice::from_raw_parts_mut(
@@ -92,7 +92,7 @@ pub fn sign(
             assertion.cbAuthenticatorData as usize,
         )
     };
-    let authenticator_data = base64::encode_config(authenticator_data.to_vec(), base64::STANDARD);
+    let authenticator_data = base64::encode_config(authenticator_data, base64::STANDARD);
 
     unsafe { drop(Box::from_raw(options)) }
     unsafe { drop(Box::from_raw(webuathn_client_data)) }
