@@ -29,7 +29,7 @@ pub fn sign(
 
     let key_handles: Vec<KeyHandle> = credential_ids
         .iter()
-        .map(|credential_id| {
+        .filter_map(|credential_id| {
             let credential_id =
                 base64::decode_config(credential_id, base64::URL_SAFE_NO_PAD).unwrap_or_default();
             if credential_id.is_empty() {
@@ -41,7 +41,6 @@ pub fn sign(
                 })
             }
         })
-        .flatten()
         .collect();
 
     let (status_tx, _status_rx) = channel::<StatusUpdate>();
