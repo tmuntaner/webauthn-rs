@@ -1,7 +1,7 @@
 [package]
 name = "tmuntaner-webauthn"
 authors = ["Thomas Muntaner <thomas.muntaner@gmail.com>"]
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.11"
 edition = "2018"
 license = "MPL-2.0"
 description = "A webauthn client"
@@ -11,17 +11,19 @@ documentation = "https://docs.rs/tmuntaner-webauthn"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+notifications = ["notify-rust"]
+progress_bar = ["indicatif"]
+full = ["progress_bar", "notifications"]
+
 [dependencies]
 anyhow = "1.0"
 base64 = "0.13"
 url = "2.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
-
-[target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
-indicatif = "0.16"
-authenticator = "0.3"
-sha2 = "0.10"
+notify-rust = {version ="4", optional = true}
+indicatif = { version = "0.16.2", optional = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 widestring = "0.5"
@@ -33,3 +35,7 @@ features = [
     "Win32_Networking_WindowsWebServices",
     "Win32_UI_WindowsAndMessaging",
 ]
+
+[target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
+authenticator = "0.3"
+sha2 = "0.10"

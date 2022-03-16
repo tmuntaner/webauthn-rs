@@ -6,6 +6,23 @@
 
 mod utils;
 
+pub trait WebauthnNotifier {
+    fn notify_start(&self) -> Result<()>;
+    fn notify_end(&self) -> Result<()>;
+}
+
+#[cfg(feature = "progress_bar")]
+mod progress_bar;
+
+#[cfg(feature = "progress_bar")]
+use crate::progress_bar::ProgressBarFallbackNotifier;
+
+#[cfg(feature = "notifications")]
+mod desktop_notifications;
+
+#[cfg(feature = "notifications")]
+use crate::desktop_notifications::DesktopNotificationsFallbackNotifier;
+
 #[cfg(target_os = "windows")]
 mod windows;
 
@@ -41,20 +58,53 @@ pub struct SignatureResponse {
     pub authenticator_data: String,
 }
 
-#[cfg(target_os = "windows")]
-pub fn sign(
-    challenge_str: String,
-    host: String,
-    credential_ids: Vec<String>,
-) -> Result<SignatureResponse> {
-    windows::sign(challenge_str, host, credential_ids)
+#[derive(Default)]
+pub struct WebauthnClient {
+    notifiers: Vec<Box<dyn WebauthnNotifier>>,
 }
 
-#[cfg(any(target_os = "linux", target_os = "macos"))]
-pub fn sign(
-    challenge_str: String,
-    host: String,
-    credential_ids: Vec<String>,
-) -> Result<SignatureResponse> {
-    mozilla::sign(challenge_str, host, credential_ids)
+impl WebauthnClient {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn add_notifier(&mut self, notifier: Box<dyn WebauthnNotifier>) -> &mut WebauthnClient {
+        self.notifiers.push(notifier);
+
+        self
+    }
+
+    #[cfg(feature = "progress_bar")]
+    pub fn add_progress_bar_notifier(&mut self) -> &mut WebauthnClient {
+        let notifier = Box::new(ProgressBarFallbackNotifier::new());
+
+        self.add_notifier(notifier)
+    }
+
+    #[cfg(feature = "notifications")]
+    pub fn add_desktop_notification_notifier(&mut self) -> &mut WebauthnClient {
+        let notifier = Box::new(DesktopNotificationsFallbackNotifier::new());
+
+        self.add_notifier(notifier)
+    }
+
+    #[cfg(target_os = "windows")]
+    pub fn sign(
+        self,
+        challenge_str: String,
+        host: String,
+        credential_ids: Vec<String>,
+    ) -> Result<SignatureResponse> {
+        windows::sign(challenge_str, host, credential_ids)
+    }
+
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    pub fn sign(
+        self,
+        challenge_str: String,
+        host: String,
+        credential_ids: Vec<String>,
+    ) -> Result<SignatureResponse> {
+        mozilla::sign(challenge_str, host, credential_ids, self.notifiers)
+    }
 }

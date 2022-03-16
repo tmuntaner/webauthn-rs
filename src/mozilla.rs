@@ -4,13 +4,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-use crate::SignatureResponse;
+use crate::{SignatureResponse, WebauthnNotifier};
 use anyhow::{anyhow, Result};
 use authenticator::{
     authenticatorservice::AuthenticatorService, statecallback::StateCallback,
     AuthenticatorTransports, KeyHandle, SignFlags, StatusUpdate,
 };
-use indicatif::{ProgressBar, ProgressStyle};
 use sha2::{Digest, Sha256};
 use std::sync::mpsc::channel;
 
@@ -18,6 +17,7 @@ pub fn sign(
     challenge_str: String,
     host: String,
     credential_ids: Vec<String>,
+    notifiers: Vec<Box<dyn WebauthnNotifier>>,
 ) -> Result<SignatureResponse> {
     let mut manager = AuthenticatorService::new()?;
     manager.add_u2f_usb_hid_platform_transports();
@@ -46,22 +46,9 @@ pub fn sign(
     let (status_tx, _status_rx) = channel::<StatusUpdate>();
     let (sign_tx, sign_rx) = channel();
 
-    let pb = ProgressBar::new_spinner();
-    pb.enable_steady_tick(120);
-    pb.set_style(
-        ProgressStyle::default_spinner()
-            .tick_strings(&[
-                "▹▹▹▹▹",
-                "▸▹▹▹▹",
-                "▹▸▹▹▹",
-                "▹▹▸▹▹",
-                "▹▹▹▸▹",
-                "▹▹▹▹▸",
-                "▪▪▪▪▪",
-            ])
-            .template("{spinner:.blue} {msg}"),
-    );
-    pb.set_message("Please insert and activate your U2F device...");
+    for notifier in &notifiers {
+        notifier.notify_start()?;
+    }
 
     let callback = StateCallback::new(Box::new(move |rv| {
         sign_tx.send(rv).unwrap();
@@ -85,7 +72,10 @@ pub fn sign(
         .map_err(|_| anyhow!("Problem receiving, unable to continue"))?
         .map_err(|_| anyhow!("There was an issue authenticating your U2F device. Please ensure that it's set up on your account, plugged in, and that you activate it."))?;
     let (_app_id, _used_handle, sign_data, _device_info) = sign_result;
-    pb.finish_with_message("Processing sign request...");
+
+    for notifier in &notifiers {
+        notifier.notify_end()?;
+    }
 
     let sign_data = sign_data.as_slice();
     let user_present = sign_data[0];
