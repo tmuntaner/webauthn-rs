@@ -20,11 +20,6 @@ impl WebauthnNotifier for DesktopNotificationsFallbackNotifier {
     }
 
     fn notify_end(&self) -> anyhow::Result<()> {
-        Notification::new()
-            .summary("WebAuthn")
-            .body("Processing sign request.")
-            .show()?;
-
         Ok(())
     }
 }
