@@ -26,7 +26,7 @@ notify-rust = {version ="4", optional = true}
 indicatif = { version = "0.16.2", optional = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-widestring = "0.5"
+widestring = "1.0"
 
 [target.'cfg(target_os = "windows")'.dependencies.windows]
 version = "^0.37"
