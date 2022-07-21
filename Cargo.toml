@@ -29,7 +29,7 @@ indicatif = { version = "0.16.2", optional = true }
 widestring = "1.0"
 
 [target.'cfg(target_os = "windows")'.dependencies.windows]
-version = "^0.38"
+version = "^0.39"
 features = [
     "Win32_Foundation",
     "Win32_Networking_WindowsWebServices",
