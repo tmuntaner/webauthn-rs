@@ -78,8 +78,9 @@ pub fn sign(
     });
     let options = Box::into_raw(options);
 
-    let assertion_ptr =
-        unsafe { WebAuthNAuthenticatorGetAssertion(hwnd, rp_id, webuathn_client_data, options) }?;
+    let assertion_ptr = unsafe {
+        WebAuthNAuthenticatorGetAssertion(hwnd, rp_id, webuathn_client_data, Some(options))
+    }?;
     let assertion: Box<WEBAUTHN_ASSERTION> = unsafe { Box::from_raw(assertion_ptr) };
 
     let signature = unsafe {
