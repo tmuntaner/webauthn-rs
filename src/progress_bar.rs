@@ -1,5 +1,6 @@
 use crate::WebauthnNotifier;
 use indicatif::{ProgressBar, ProgressStyle};
+use std::time::Duration;
 
 pub struct ProgressBarFallbackNotifier {
     progress_bar: ProgressBar,
@@ -7,21 +8,21 @@ pub struct ProgressBarFallbackNotifier {
 
 impl ProgressBarFallbackNotifier {
     pub fn new() -> Self {
+        let style = ProgressStyle::default_spinner()
+            .tick_strings(&[
+                "▹▹▹▹▹",
+                "▸▹▹▹▹",
+                "▹▸▹▹▹",
+                "▹▹▸▹▹",
+                "▹▹▹▸▹",
+                "▹▹▹▹▸",
+                "▪▪▪▪▪",
+            ])
+            .template("{spinner:.blue} {msg}")
+            .unwrap(); // this should always work
         let pb = ProgressBar::new_spinner();
-        pb.enable_steady_tick(120);
-        pb.set_style(
-            ProgressStyle::default_spinner()
-                .tick_strings(&[
-                    "▹▹▹▹▹",
-                    "▸▹▹▹▹",
-                    "▹▸▹▹▹",
-                    "▹▹▸▹▹",
-                    "▹▹▹▸▹",
-                    "▹▹▹▹▸",
-                    "▪▪▪▪▪",
-                ])
-                .template("{spinner:.blue} {msg}"),
-        );
+        pb.enable_steady_tick(Duration::new(120, 0));
+        pb.set_style(style);
 
         Self { progress_bar: pb }
     }
