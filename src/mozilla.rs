@@ -10,6 +10,7 @@ use authenticator::{
     authenticatorservice::AuthenticatorService, statecallback::StateCallback,
     AuthenticatorTransports, KeyHandle, SignFlags, StatusUpdate,
 };
+use base64::{alphabet, engine, Engine};
 use sha2::{Digest, Sha256};
 use std::sync::mpsc::channel;
 
@@ -27,11 +28,15 @@ pub fn sign(
     let (client_data_json, chall_bytes, app_bytes) =
         generate_input_hashes(origin, challenge_str, host)?;
 
+    let base64urlsafe =
+        engine::GeneralPurpose::new(&alphabet::URL_SAFE, engine::general_purpose::NO_PAD);
+    let base64standard =
+        engine::GeneralPurpose::new(&alphabet::STANDARD, engine::general_purpose::PAD);
+
     let key_handles: Vec<KeyHandle> = credential_ids
         .iter()
         .filter_map(|credential_id| {
-            let credential_id =
-                base64::decode_config(credential_id, base64::URL_SAFE_NO_PAD).unwrap_or_default();
+            let credential_id = base64urlsafe.encode(credential_id).as_bytes().to_vec();
             if credential_id.is_empty() {
                 None
             } else {
@@ -87,9 +92,9 @@ pub fn sign(
     authenticator_data.extend(counter.to_be_bytes());
 
     Ok(SignatureResponse {
-        client_data: base64::encode_config(client_data_json.as_bytes(), base64::STANDARD),
-        signature_data: base64::encode_config(signature, base64::STANDARD),
-        authenticator_data: base64::encode_config(authenticator_data, base64::STANDARD),
+        client_data: base64standard.encode(client_data_json.as_bytes()),
+        signature_data: base64standard.encode(signature),
+        authenticator_data: base64standard.encode(authenticator_data),
     })
 }
 

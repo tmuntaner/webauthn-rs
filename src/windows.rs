@@ -6,6 +6,7 @@
 
 use crate::SignatureResponse;
 use anyhow::Result;
+use base64::{alphabet, engine, Engine};
 use widestring::U16CString;
 use windows::core::PCWSTR;
 use windows::Win32::Networking::WindowsWebServices::*;
@@ -27,11 +28,14 @@ pub fn sign(
     let credential_type = U16CString::from_str(credential_type)?;
     let credential_type = PCWSTR(credential_type.as_ptr() as *mut u16);
 
+    let base64urlsafe =
+        engine::GeneralPurpose::new(&alphabet::URL_SAFE, engine::general_purpose::NO_PAD);
+    let base64standard =
+        engine::GeneralPurpose::new(&alphabet::STANDARD, engine::general_purpose::PAD);
+
     let mut webauthn_credentials: Vec<WEBAUTHN_CREDENTIAL> = credential_ids
         .into_iter()
-        .map(|credential_id| {
-            base64::decode_config(credential_id, base64::URL_SAFE_NO_PAD).unwrap_or_default()
-        })
+        .map(|credential_id| base64urlsafe.decode(credential_id).unwrap_or_default())
         .map(|mut decoded_credential| {
             WEBAUTHN_CREDENTIAL {
                 dwVersion: 1u32, // WEBAUTHN_CREDENTIAL_CURRENT_VERSION
@@ -86,7 +90,7 @@ pub fn sign(
     let signature = unsafe {
         std::slice::from_raw_parts_mut(assertion.pbSignature, assertion.cbSignature as usize)
     };
-    let signature_data = base64::encode_config(signature, base64::STANDARD);
+    let signature_data = base64standard.encode(signature);
 
     let authenticator_data = unsafe {
         std::slice::from_raw_parts_mut(
@@ -94,13 +98,13 @@ pub fn sign(
             assertion.cbAuthenticatorData as usize,
         )
     };
-    let authenticator_data = base64::encode_config(authenticator_data, base64::STANDARD);
+    let authenticator_data = base64standard.encode(authenticator_data);
 
     unsafe { drop(Box::from_raw(options)) }
     unsafe { drop(Box::from_raw(webuathn_client_data)) }
 
     Ok(SignatureResponse {
-        client_data: base64::encode_config(client_data.as_bytes(), base64::STANDARD),
+        client_data: base64standard.encode(client_data.as_bytes()),
         authenticator_data,
         signature_data,
     })
