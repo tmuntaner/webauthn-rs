@@ -36,12 +36,13 @@ pub fn sign(
     let key_handles: Vec<KeyHandle> = credential_ids
         .iter()
         .filter_map(|credential_id| {
-            let credential_id = base64urlsafe.encode(credential_id).as_bytes().to_vec();
-            if credential_id.is_empty() {
+            let credential_id_encoded = base64urlsafe.decode(credential_id).unwrap_or_default();
+
+            if credential_id_encoded.is_empty() {
                 None
             } else {
                 Some(KeyHandle {
-                    credential: credential_id,
+                    credential: credential_id_encoded,
                     transports: AuthenticatorTransports::empty(),
                 })
             }
@@ -91,10 +92,14 @@ pub fn sign(
     authenticator_data.push(user_present);
     authenticator_data.extend(counter.to_be_bytes());
 
+    let client_data = base64standard.encode(client_data_json.as_bytes());
+    let signature_data = base64standard.encode(signature);
+    let authenticator_data = base64standard.encode(authenticator_data);
+
     Ok(SignatureResponse {
-        client_data: base64standard.encode(client_data_json.as_bytes()),
-        signature_data: base64standard.encode(signature),
-        authenticator_data: base64standard.encode(authenticator_data),
+        client_data,
+        signature_data,
+        authenticator_data,
     })
 }
 
