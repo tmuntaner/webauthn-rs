@@ -9,6 +9,7 @@ use anyhow::Result;
 use base64::{alphabet, engine, Engine};
 use widestring::U16CString;
 use windows::core::PCWSTR;
+use windows::Win32::Foundation::BOOL;
 use windows::Win32::Networking::WindowsWebServices::*;
 use windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
 
@@ -20,60 +21,57 @@ pub fn sign(
     let origin: String = format!("https://{}", host);
     let rp_id = U16CString::from_str(host)?;
     let rp_id = PCWSTR(rp_id.as_ptr() as *mut u16);
+    let mut app_id_used: BOOL = false.into();
     let client_data = crate::utils::client_data(origin, challenge_str)?;
 
     let hwnd = unsafe { GetForegroundWindow() };
-
-    let credential_type = String::from("public-key");
-    let credential_type = U16CString::from_str(credential_type)?;
-    let credential_type = PCWSTR(credential_type.as_ptr() as *mut u16);
 
     let base64urlsafe =
         engine::GeneralPurpose::new(&alphabet::URL_SAFE, engine::general_purpose::NO_PAD);
     let base64standard =
         engine::GeneralPurpose::new(&alphabet::STANDARD, engine::general_purpose::PAD);
 
-    let mut webauthn_credentials: Vec<WEBAUTHN_CREDENTIAL> = credential_ids
+    let ids: Vec<Vec<u8>> = credential_ids
         .into_iter()
         .map(|credential_id| base64urlsafe.decode(credential_id).unwrap_or_default())
-        .map(|mut decoded_credential| {
-            WEBAUTHN_CREDENTIAL {
-                dwVersion: 1u32, // WEBAUTHN_CREDENTIAL_CURRENT_VERSION
-                cbId: decoded_credential.len() as u32,
-                pbId: decoded_credential.as_mut_ptr(),
-                pwszCredentialType: credential_type,
-            }
-        })
         .collect();
 
-    let webauthn_credentials = WEBAUTHN_CREDENTIALS {
-        cCredentials: webauthn_credentials.len() as u32,
-        pCredentials: webauthn_credentials.as_mut_ptr(),
-    };
+    let len = ids.len();
+    let mut credentials: Vec<WEBAUTHN_CREDENTIAL> = Vec::with_capacity(len);
 
-    let hash_algorithm = String::from("SHA-256");
-    let hash_algorithm = U16CString::from_str(hash_algorithm)?;
-    let hash_algorithm = PCWSTR(hash_algorithm.as_ptr() as *mut u16);
+    for id in ids.iter() {
+        credentials.push(WEBAUTHN_CREDENTIAL {
+            dwVersion: WEBAUTHN_CREDENTIAL_CURRENT_VERSION,
+            cbId: id.len() as u32,
+            pbId: id.as_ptr() as *mut u8,
+            pwszCredentialType: WEBAUTHN_CREDENTIAL_TYPE_PUBLIC_KEY,
+        });
+    }
+
+    let credentials_list = WEBAUTHN_CREDENTIALS {
+        cCredentials: len as u32,
+        pCredentials: credentials.as_mut_ptr(),
+    };
 
     let client_data_bytes = client_data.as_bytes();
     let webuathn_client_data = Box::new(WEBAUTHN_CLIENT_DATA {
-        dwVersion: 1u32,
+        dwVersion: WEBAUTHN_CLIENT_DATA_CURRENT_VERSION,
         cbClientDataJSON: client_data_bytes.len() as u32,
         pbClientDataJSON: client_data_bytes.as_ptr() as *mut u8,
-        pwszHashAlgId: hash_algorithm,
+        pwszHashAlgId: WEBAUTHN_HASH_ALGORITHM_SHA_256,
     });
     let webuathn_client_data = Box::into_raw(webuathn_client_data);
 
     let options = Box::new(WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS {
-        dwVersion: 5u32,
+        dwVersion: WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS_CURRENT_VERSION,
         dwTimeoutMilliseconds: 30 * 1000u32,
-        CredentialList: webauthn_credentials,
+        CredentialList: credentials_list,
         Extensions: WEBAUTHN_EXTENSIONS::default(),
         dwAuthenticatorAttachment: 0u32,
         dwUserVerificationRequirement: 0u32,
         dwFlags: 0u32,
-        pwszU2fAppId: rp_id,
-        pbU2fAppId: std::ptr::null_mut(),
+        pwszU2fAppId: PCWSTR::null(),
+        pbU2fAppId: std::ptr::addr_of_mut!(app_id_used),
         pCancellationId: std::ptr::null_mut(),
         pAllowCredentialList: std::ptr::null_mut(),
         dwCredLargeBlobOperation: 0,
